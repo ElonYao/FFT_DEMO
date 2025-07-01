@@ -53,6 +53,26 @@
 #include "c2000ware_libraries.h"
 #include "c2000_freertos.h"
 #include "FreeRTOS.h"
+#include "dsp.h"
+#include "fpu_cfft.h"
+#include "fpu_rfft.h"
+#include "math.h"
+
+#pragma DATA_SECTION(test_input, "FFT_inputBuffer_1")
+#pragma DATA_SECTION(test_output, "FFT_inputBuffer_2")
+
+#define FFT_STAGES 7
+#define FFT_SIZE 128
+CFFT_F32_STRUCT FFT_obj;
+CFFT_F32_STRUCT_Handle FFT_handle = &FFT_obj;
+
+float test_input[FFT_SIZE<<1];
+float test_output[FFT_SIZE<<1];
+float twiddleFactors[FFT_SIZE];
+
+void fftInit(void);
+void signalFilling(void);
+
 //
 // Main
 //
@@ -89,17 +109,43 @@ void main(void)
     // C2000Ware Library initialization
     //
     C2000Ware_libraries_init();
+    fftInit();
+    signalFilling();
 
+
+    CFFT_f32(FFT_handle);
+    CFFT_f32_mag_TMU0(FFT_handle);
     //
     // Enable Global Interrupt (INTM) and real time interrupt (DBGM)
     //
     EINT;
     ERTM;
-    EPWM_setCounterCompareValue(PWM1_BASE, EPWM_COUNTER_COMPARE_A, 3000U);
 
     while(1)
     {
         
+    }
+}
+void fftInit(void)
+{
+
+    CFFT_f32_setInputPtr(FFT_handle, test_input);
+    CFFT_f32_setOutputPtr(FFT_handle, test_output);
+    CFFT_f32_setStages(FFT_handle, FFT_STAGES);
+    CFFT_f32_setFFTSize(FFT_handle, FFT_SIZE);
+    CFFT_f32_setTwiddlesPtr(FFT_handle, twiddleFactors);
+    //generate twiddle factor and save to the designated array
+    CFFT_f32_sincostable(FFT_handle);
+
+}
+
+void signalFilling(void)
+{
+    uint32_t i=0;
+    for(i=0;i<FFT_SIZE;i++)
+    {
+        test_input[2*i]=1000.0f*sinf(2*M_PI*43.0f*i/FFT_SIZE)+10*cosf(2*M_PI*25.0f*i/FFT_SIZE);
+        test_input[2*i+1]=0.0f;
     }
 }
 //
