@@ -115,6 +115,13 @@ void main(void)
 
     CFFT_f32(FFT_handle);
     CFFT_f32_mag_TMU0(FFT_handle);
+    for(int i=0;i<256;i++)
+    {
+        if(0==i) test_output[i]*=0.0078125f;
+        else test_output[i]*=0.015625f;
+
+    }
+
     //
     // Enable Global Interrupt (INTM) and real time interrupt (DBGM)
     //
@@ -144,7 +151,7 @@ void signalFilling(void)
     uint32_t i=0;
     for(i=0;i<FFT_SIZE;i++)
     {
-        test_input[2*i]=1000.0f*sinf(2*M_PI*43.0f*i/FFT_SIZE)+10*cosf(2*M_PI*25.0f*i/FFT_SIZE);
+        test_input[2*i]=2.0f+3.5f*sinf(2*M_PI*50.0f*i/FFT_SIZE)+4.5*cosf(2*M_PI*60.0f*i/FFT_SIZE);
         test_input[2*i+1]=0.0f;
     }
 }
